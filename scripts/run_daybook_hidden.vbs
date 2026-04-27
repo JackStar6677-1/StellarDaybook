@@ -1,16 +1,16 @@
-' Inicia StellarDaybook sin ventana de consola.
-' Edita PYTHONW y REPO según tu máquina.
-
+' Inicia StellarDaybook sin consola. Rutas relativas al repo (carpeta padre de \scripts).
 Option Explicit
-Dim sh, PYTHONW, REPO, cmd
+Dim sh, fso, repo, pyw
 Set sh = CreateObject("WScript.Shell")
+Set fso = CreateObject("Scripting.FileSystemObject")
 
-' Ruta a pythonw.exe del venv (o instalación global).
-PYTHONW = "C:\Users\Jack\Documents\GitHub\Experimentos\StellarDaybook\.venv\Scripts\pythonw.exe"
+repo = fso.GetParentFolderName(fso.GetParentFolderName(WScript.ScriptFullName))
+pyw = fso.BuildPath(repo, ".venv\Scripts\pythonw.exe")
 
-' Raíz del repositorio (por si el perfil de Python lo necesita explícito).
-REPO = "C:\Users\Jack\Documents\GitHub\Experimentos\StellarDaybook"
+If Not fso.FileExists(pyw) Then
+  ' Sin MsgBox para no molestar en inicio; codigo 1 = falta venv o install no ejecutado
+  WScript.Quit 1
+End If
 
-cmd = """" & PYTHONW & """ -m stellar_daybook"
-sh.CurrentDirectory = REPO
-sh.Run cmd, 0, False
+sh.CurrentDirectory = repo
+sh.Run """" & pyw & """ -m stellar_daybook", 0, False

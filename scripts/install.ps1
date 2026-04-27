@@ -1,16 +1,36 @@
-# Instala venv + paquete editable en la raíz del repo.
+# Instala venv + paquete editable en la raiz del repo.
+# Ejecutar: powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
 $ErrorActionPreference = "Stop"
-Set-Location (Resolve-Path (Join-Path $PSScriptRoot ".."))
-if (-not (Test-Path ".\config.local.yaml")) {
+$repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+Set-Location -LiteralPath $repo
+
+if (-not (Test-Path -LiteralPath ".\config.local.yaml") -and (Test-Path ".\config.example.yaml")) {
     Copy-Item ".\config.example.yaml" ".\config.local.yaml"
-    Write-Host "Creado config.local.yaml — edita machine.name (Nova/Nexus)."
+    Write-Host "Creado config.local.yaml - edita machine.name (Nova/Nexus)."
 }
-$venvPy = ".\.venv\Scripts\python.exe"
-if (Get-Command py -ErrorAction SilentlyContinue) {
-    py -3 -m venv .venv
-} else {
-    python -m venv .venv
+
+$venvPy = Join-Path $repo ".venv\Scripts\python.exe"
+if ((Test-Path ".\.venv") -and -not (Test-Path -LiteralPath $venvPy)) {
+    Write-Host "Eliminando .venv incompleto..."
+    Remove-Item -Recurse -Force ".\.venv"
 }
+
+if (-not (Test-Path -LiteralPath $venvPy)) {
+    $ok = $false
+    if (Get-Command py -ErrorAction SilentlyContinue) {
+        & py -3 -m venv .venv
+        if (Test-Path -LiteralPath $venvPy) { $ok = $true }
+    }
+    if (-not $ok -and (Get-Command python -ErrorAction SilentlyContinue)) {
+        & python -m venv .venv
+        if (Test-Path -LiteralPath $venvPy) { $ok = $true }
+    }
+    if (-not $ok) {
+        Write-Error "No se pudo crear .venv. Instala Python 3.11+ desde https://www.python.org/downloads/ y marca 'Add python.exe to PATH'. Cierra y abre PowerShell."
+        exit 1
+    }
+}
+
 & $venvPy -m pip install -U pip
 & $venvPy -m pip install -e .
 Write-Host "Listo. Activa con: .\.venv\Scripts\Activate.ps1"

@@ -65,10 +65,20 @@ python -m stellar_daybook --once
 
 Ignora el mínimo de seguimiento activo y fuerza commit/push del día actual.
 
-### Inicio automático al iniciar sesión
+### Activar en la laptop (Nova), una sola vez
 
-1. Ajusta rutas en `scripts/run_daybook_hidden.vbs` (Python `pythonw` y opcionalmente `cd` al repo).
-2. Ejecuta `Win + R` → `shell:startup` → crea acceso directo al `.vbs` o usa el Programador de tareas con acción **Iniciar un programa** → `wscript.exe` con argumento la ruta del `.vbs`.
+En **PowerShell** (usuario normal):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File "C:\Users\Jack\Documents\GitHub\Experimentos\StellarDaybook\scripts\activate_nova.ps1"
+```
+
+Hace: `config.local.yaml` con **Nova**, `install.ps1` + `pip install -e .`, arranca el agente **ya** con `wscript` (sin consola) y deja un acceso directo **StellarDaybook** en la carpeta **Inicio** de Windows para cada inicio de sesión. Detalle en `_nova_activation_log.txt` en la raíz del repo.
+
+### Inicio automático (manual)
+
+1. Ajusta rutas en `scripts/run_daybook_hidden.vbs` (Python `pythonw` del `.venv`).
+2. O usa el acceso directo que crea `activate_nova.ps1` en `shell:startup`.
 
 ## Pushes programados
 
