@@ -1,0 +1,27 @@
+# Config local (credenciales, overrides)
+config.local.yaml
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+.venv/
+venv/
+ENV/
+
+# Agente / estado local (no subir caches de sesión)
+data/state/*
+!data/state/.gitkeep
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+Thumbs.db
+.DS_Store
+
+# Logs locales
+*.log

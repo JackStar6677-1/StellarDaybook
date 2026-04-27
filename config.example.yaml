@@ -1,0 +1,50 @@
+# Copiar a config.local.yaml y personalizar (config.local.yaml está en .gitignore)
+
+machine:
+  # "Nova" (laptop) o "Nexus" (desktop en casa)
+  name: "Nova"
+
+timezone: "America/Santiago"
+
+# Horarios de push (24 h, hora Chile)
+schedule:
+  first_push: "13:30"
+  second_push_mon_thu: "17:20"
+  second_push_friday: "16:25"
+  lunch_window:
+    start: "13:00"
+    end: "14:00"
+
+# Jornada laboral (etiquetas en el informe)
+work:
+  monday_thursday:
+    start: "07:55"
+    end: "17:30"
+  friday:
+    start: "07:55"
+    end: "16:35"
+
+# Clima (Open-Meteo, sin API key) — Padre Hurtado, RM
+weather:
+  label: "Padre Hurtado, Chile"
+  latitude: -33.565
+  longitude: -70.769
+
+# Red en el informe: nombre SSID + solo IPv4 local
+network:
+  include_ssid: true
+  include_local_ipv4: true
+
+# Pausa desde bandeja (minutos predefinidos sugeridos)
+pause_presets_minutes: [10, 15, 20, 30]
+
+# Procesos o patrones a no listar en público (ejemplos)
+privacy:
+  exclude_process_names: []
+  exclude_window_title_substrings: []
+
+# Muestreo / push (el agente usará estos valores)
+agent:
+  # Mínimo de minutos con muestreo activo antes de considerar válido un push programado
+  min_uptime_minutes_before_push: 12
+  foreground_poll_seconds: 20
