@@ -11,6 +11,7 @@ __pycache__/
 .venv/
 venv/
 ENV/
+*.egg-info/
 
 # Agente / estado local (no subir caches de sesión)
 data/state/*
@@ -25,3 +26,4 @@ Thumbs.db
 
 # Logs locales
 *.log
+_nova_activation_log.txt
