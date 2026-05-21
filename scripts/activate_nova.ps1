@@ -25,8 +25,8 @@ if (-not (Test-Path -LiteralPath $cfg) -and (Test-Path -LiteralPath $ex)) {
 }
 if (Test-Path -LiteralPath $cfg) {
     $raw = Get-Content -LiteralPath $cfg -Raw
-    if ($raw -match "(?m)^(\s*name:\s*)Nexus\s*$") {
-        $raw2 = $raw -replace "(?m)^(\s*name:\s*)Nexus\s*$", '${1}Nova'
+    if ($raw -match '(?m)^(\s*name:\s*).+$') {
+        $raw2 = $raw -replace '(?m)^(\s*name:\s*).+$', '$1"Nova"'
         Set-Content -LiteralPath $cfg -Value $raw2 -Encoding UTF8
         Write-Log "machine.name -> Nova"
     } else {

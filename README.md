@@ -1,120 +1,153 @@
 # StellarDaybook
 
-Bitácora diaria del PC en **Markdown** con pushes a GitHub: ventana en primer plano (Windows), red local (SSID + IPv4), clima (Open-Meteo, Padre Hurtado), uso aproximado de CPU/RAM en cada push, heurísticas (OBS, Minecraft/CurseForge) y etiqueta de jornada en horario Chile (`America/Santiago`).
+![StellarDaybook banner](assets/stellar-daybook-banner.svg)
 
-Repo pensado para ser **público**: no escribas datos sensibles en `notes/` ni en exclusiones mal configuradas.
+StellarDaybook es una bitácora diaria para Windows que registra actividad del PC en Markdown, arma reportes por día y hace commits/pushes programados a GitHub con contexto útil: ventana en primer plano, red local, clima, uso aproximado de CPU/RAM y etiquetas de jornada.
 
-## Requisitos
+Está pensado para usarse en dos máquinas:
 
-- **Windows 10/11** (foreground Win32 + bandeja).
-- **Python 3.11+**
-- **Git** (configura `user.name` / `user.email` al menos una vez) y **GitHub CLI** (`gh`) con `gh auth setup-git` para pushes sin PAT en scripts.
+- `Nexus`, el desktop de este PC.
+- `Nova`, la laptop.
 
-## Instalación rápida
+## Qué Hace
 
-Opción A — script (PowerShell):
+- Toma muestras del proceso en primer plano desde la bandeja del sistema.
+- Resume la actividad diaria en `reports/YYYY-MM-DD.md`.
+- Anexa instantáneas de cada push con red, clima y recursos del sistema.
+- Hace commits y `git push` cuando se cumplen las ventanas horarias.
+- Pausa el muestreo por minutos predefinidos desde el icono de bandeja.
+
+## Inicio Rápido
+
+### 1. Instalar
 
 ```powershell
 Set-ExecutionPolicy -Scope CurrentUser RemoteSigned -Force
 .\scripts\install.ps1
 ```
 
-Opción B — manual:
+Ese script:
+
+- crea `.venv` si hace falta,
+- instala las dependencias,
+- crea `config.local.yaml` si no existe,
+- y fija una identidad local de Git si este PC todavía no tenía `user.name` / `user.email`.
+
+### 2. Elegir máquina
+
+En este PC usa:
 
 ```powershell
-copy config.example.yaml config.local.yaml
-# Edita machine.name: Nova o Nexus
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -e .
+.\scripts\activate_nexus.ps1
 ```
 
-Si aún no hay repositorio Git:
-
-```bat
-scripts\init-repo.bat
-```
-
-Crea el remoto y sube:
+En la laptop usa:
 
 ```powershell
-gh repo create StellarDaybook --public --source=. --remote=origin --push
+.\scripts\activate_nova.ps1
 ```
 
-## Uso
+Ambos scripts:
 
-### Agente (bandeja, sin consola recomendado)
+- dejan `config.local.yaml` con la máquina correcta,
+- reinstalan el entorno editable,
+- lanzan el agente oculto con `wscript`,
+- y crean un acceso directo en la carpeta Inicio de Windows.
+
+### 3. Probar un informe
+
+```powershell
+.\.venv\Scripts\python.exe -m stellar_daybook --once
+```
+
+## Uso Diario
+
+### Agente en bandeja
 
 ```powershell
 pythonw -m stellar_daybook
 ```
 
-O con consola para depurar:
+### Depuración en consola
 
 ```powershell
 python -m stellar_daybook --console
 ```
 
-Icono **StellarDaybook** en el área de notificación (iconos ocultos): informe manual + push, pausas (10–60 min), abrir carpeta del repo, salir.
-
-### Un solo informe + push (prueba)
+### Informe manual + push
 
 ```powershell
 python -m stellar_daybook --once
 ```
 
-Ignora el mínimo de seguimiento activo y fuerza commit/push del día actual.
+## Flujo
 
-### Activar en la laptop (Nova), una sola vez
-
-En **PowerShell** (usuario normal):
-
-```powershell
-powershell -ExecutionPolicy Bypass -File "C:\Users\Jack\Documents\GitHub\Experimentos\StellarDaybook\scripts\activate_nova.ps1"
+```mermaid
+flowchart LR
+  A[Tray app] --> B[Foreground sampler]
+  B --> C[day_state.json]
+  D[Scheduler] --> E[Report builder]
+  E --> F[reports/YYYY-MM-DD.md]
+  E --> G[Git add / commit / push]
+  G --> H[GitHub]
+  B --> E
+  C --> E
 ```
 
-Hace: `config.local.yaml` con **Nova**, `install.ps1` + `pip install -e .`, arranca el agente **ya** con `wscript` (sin consola) y deja un acceso directo **StellarDaybook** en la carpeta **Inicio** de Windows para cada inicio de sesión. Detalle en `_nova_activation_log.txt` en la raíz del repo.
+## Cómo Funciona
 
-### Activar en el desktop (Nexus), una sola vez
+```mermaid
+sequenceDiagram
+  participant Win as Windows
+  participant App as StellarDaybook
+  participant Git as Git/GitHub
+  participant State as Local state
 
-En **PowerShell**:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File "C:\Users\pablo\OneDrive\Documents\GitHub\StellarDaybook\scripts\activate_nexus.ps1"
+  Win->>App: app arranca en segundo plano
+  App->>State: carga estado del día
+  App->>Win: consulta ventana en primer plano
+  App->>State: suma segundos de actividad
+  App->>App: evalúa ventanas de push
+  App->>Git: commit + push del reporte
+  Git-->>App: resultado
 ```
-
-Hace lo mismo que la activación de laptop, pero deja `machine.name: "Nexus"` y escribe `_nexus_activation_log.txt`.
-
-### Inicio automático (manual)
-
-1. Ajusta rutas en `scripts/run_daybook_hidden.vbs` (Python `pythonw` del `.venv`).
-2. O usa el acceso directo que crea `activate_nova.ps1` en `shell:startup`.
-
-## Pushes programados
-
-| Día        | Ventana local (Chile) |
-|------------|------------------------|
-| Todos      | **13:30** — almuerzo   |
-| Lun–jue    | **17:20** — cierre     |
-| Viernes    | **16:25** — cierre     |
-
-Si el seguimiento activo acumulado es **menor** al mínimo (`config` → `agent.min_uptime_minutes_before_push`), el push programado **no hace commit** (evita informes vacíos); queda registro del intento en el Markdown local y en `data/state/day_state.json`.
-
-Si `git push` falla (sin red), se retira la instantánea del intento para **reintentar** en la misma ventana horaria.
 
 ## Estructura
 
-```
-reports/          # informes diarios generados
-notes/            # tus notas (se commitean con reports)
-data/state/       # estado local + agent.log (no subir secretos)
+```text
+assets/           banner SVG animado del README
+data/state/       estado local y logs del agente
+notes/            notas manuales que también viajan al commit
+reports/          reportes diarios generados en Markdown
+scripts/          instalación, activación y arranque oculto
 src/stellar_daybook/
 ```
 
 ## Configuración
 
-`config.local.yaml` (no versionado) sobreescribe `config.example.yaml`: horarios, clima, pausas, exclusiones de privacidad, etc.
+`config.example.yaml` es la base. `config.local.yaml` la sobreescribe y no se versiona.
+
+Campos clave:
+
+- `machine.name`: `Nexus` o `Nova`.
+- `timezone`: zona horaria usada en los reportes.
+- `schedule`: ventanas horarias de push.
+- `weather`: coordenadas y etiqueta del clima.
+- `privacy`: exclusiones de procesos y títulos de ventana.
+
+## Requisitos
+
+- Windows 10/11.
+- Python 3.11 o superior.
+- Git.
+- GitHub CLI (`gh`) si quieres usar `gh auth setup-git` para pushes sin PAT.
+
+## Solución De Problemas
+
+- Si no hay `config.local.yaml`, ejecuta `.\scripts\install.ps1` o uno de los scripts de activación.
+- Si Git no tenía identidad local, `install.ps1` la configura automáticamente con el usuario de Windows.
+- Si el push falla por red o autenticación, el reporte se guarda localmente y se reintenta en la próxima ventana.
 
 ## Licencia
 
-Uso personal; cambia la licencia si publicas el código.
+Uso personal. Si lo publicas o redistribuyes, ajusta la licencia según tu necesidad.

@@ -11,6 +11,8 @@ if errorlevel 1 (
   exit /b 1
 )
 git init -b main
+git config user.name "%USERNAME%"
+git config user.email "%USERNAME%@%COMPUTERNAME%.local"
 git add -A
 git commit -m "chore: base del repo StellarDaybook (config, carpetas, plantilla)"
 echo Listo. Siguiente paso opcional:

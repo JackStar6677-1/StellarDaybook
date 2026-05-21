@@ -33,5 +33,25 @@ if (-not (Test-Path -LiteralPath $venvPy)) {
 
 & $venvPy -m pip install -U pip
 & $venvPy -m pip install -e .
+
+function Ensure-GitIdentity {
+    $name = (git config --get user.name 2>$null)
+    if ([string]::IsNullOrWhiteSpace($name)) {
+        $name = if ($env:USERNAME) { $env:USERNAME } else { "StellarDaybook" }
+        & git config user.name $name | Out-Null
+        Write-Host "Git user.name configurado localmente como: $name"
+    }
+
+    $email = (git config --get user.email 2>$null)
+    if ([string]::IsNullOrWhiteSpace($email)) {
+        $user = if ($env:USERNAME) { $env:USERNAME } else { "stellar-daybook" }
+        $machine = if ($env:COMPUTERNAME) { $env:COMPUTERNAME.ToLowerInvariant() } else { "local" }
+        $email = "$user@$machine.local"
+        & git config user.email $email | Out-Null
+        Write-Host "Git user.email configurado localmente como: $email"
+    }
+}
+
+Ensure-GitIdentity
 Write-Host "Listo. Activa con: .\.venv\Scripts\Activate.ps1"
 Write-Host "Prueba: $venvPy -m stellar_daybook --console"
