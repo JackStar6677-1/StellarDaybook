@@ -27,3 +27,4 @@ Thumbs.db
 # Logs locales
 *.log
 _nova_activation_log.txt
+_nexus_activation_log.txt

@@ -75,6 +75,16 @@ powershell -ExecutionPolicy Bypass -File "C:\Users\Jack\Documents\GitHub\Experim
 
 Hace: `config.local.yaml` con **Nova**, `install.ps1` + `pip install -e .`, arranca el agente **ya** con `wscript` (sin consola) y deja un acceso directo **StellarDaybook** en la carpeta **Inicio** de Windows para cada inicio de sesión. Detalle en `_nova_activation_log.txt` en la raíz del repo.
 
+### Activar en el desktop (Nexus), una sola vez
+
+En **PowerShell**:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File "C:\Users\pablo\OneDrive\Documents\GitHub\StellarDaybook\scripts\activate_nexus.ps1"
+```
+
+Hace lo mismo que la activación de laptop, pero deja `machine.name: "Nexus"` y escribe `_nexus_activation_log.txt`.
+
 ### Inicio automático (manual)
 
 1. Ajusta rutas en `scripts/run_daybook_hidden.vbs` (Python `pythonw` del `.venv`).
