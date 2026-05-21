@@ -1,6 +1,6 @@
 # StellarDaybook
 
-![StellarDaybook banner](assets/stellar-daybook-banner.svg)
+![StellarDaybook banner](assets/stellar-daybook-banner-galaxy.svg)
 
 StellarDaybook es una bitácora diaria para Windows que registra actividad del PC en Markdown, arma reportes por día y hace commits/pushes programados a GitHub con contexto útil: ventana en primer plano, red local, clima, uso aproximado de CPU/RAM y etiquetas de jornada.
 
