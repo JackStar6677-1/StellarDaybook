@@ -1,23 +1,86 @@
 # StellarDaybook
 
-![StellarDaybook banner](assets/stellar-daybook-banner-galaxy.svg)
+![StellarDaybook banner](assets/stellardaybook-hero.svg)
 
-StellarDaybook es una bitácora diaria para Windows que registra actividad del PC en Markdown, arma reportes por día y hace commits/pushes programados a GitHub con contexto útil: ventana en primer plano, red local, clima, uso aproximado de CPU/RAM y etiquetas de jornada.
+StellarDaybook es un diario de escritorio para Windows que genera un reporte diario en Markdown, captura el contexto local de tu máquina y sube el resultado a GitHub según una programación establecida.
 
-Está pensado para usarse en dos máquinas:
+Registra:
+- La ventana activa en primer plano.
+- Detalles de la red local.
+- Clima local a través de la API de Open-Meteo.
+- Uso aproximado de CPU y RAM.
+- Etiquetas de horas laborales y heurísticas de actividad.
 
-- `Nexus`, el desktop de este PC.
-- `Nova`, la laptop.
+Está diseñado para ser ligero, privado por defecto y fácilmente legible si se utiliza como repositorio público.
 
-## Qué Hace
+<p>
+  <img alt="Windows" src="https://img.shields.io/badge/Windows-10%2F11-0078D4?style=for-the-badge&logo=windows&logoColor=white">
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.11%2B-3776AB?style=for-the-badge&logo=python&logoColor=white">
+  <img alt="Reports" src="https://img.shields.io/badge/Reportes-Markdown-1F2937?style=for-the-badge&logo=markdown&logoColor=white">
+  <img alt="Sync" src="https://img.shields.io/badge/Sincronizaci%C3%B3n-GitHub-181717?style=for-the-badge&logo=github&logoColor=white">
+</p>
 
-- Toma muestras del proceso en primer plano desde la bandeja del sistema.
-- Resume la actividad diaria en `reports/YYYY-MM-DD.md`.
-- Anexa instantáneas de cada push con red, clima y recursos del sistema.
-- Hace commits y `git push` cuando se cumplen las ventanas horarias.
-- Pausa el muestreo por minutos predefinidos desde el icono de bandeja.
+## A simple vista
 
-## Inicio Rápido
+| Área | Qué hace |
+|---|---|
+| Captura | Registra la ventana activa, red, clima y carga del sistema. |
+| Reporte | Escribe un reporte diario en formato Markdown en la carpeta `reports/`. |
+| Sincronización | Realiza commits y subidas (push) a GitHub cuando se alcanzan los intervalos programados. |
+| Privacidad | Permite excluir títulos de ventanas y procesos específicos de los registros públicos. |
+| Perfiles | Soporta configuraciones locales independientes: `Nova` y `Nexus`. |
+
+## Flujo del sistema
+
+```mermaid
+flowchart LR
+  A["Muestreador de ventanas"] --> B["Captura de estado"]
+  B --> C["Reporte diario en Markdown"]
+  C --> D["Git commit"]
+  D --> E["Git push"]
+  B --> F["Estado local"]
+  F --> G["Validación de subidas programadas"]
+  G --> D
+```
+
+## Arquitectura
+
+```mermaid
+graph TD
+  subgraph Windows["Escritorio Windows"]
+      Tray["App de bandeja de sistema"]
+      Sample["Muestreador de ventanas + recursos"]
+      Sched["Planificador"]
+      State["data/state/"]
+  end
+
+  subgraph Repo["Salida del repositorio"]
+      Notes["notes/"]
+      Reports["reports/"]
+      Config["config.local.yaml"]
+  end
+
+  Git["Git + GitHub remoto"]
+
+  Tray --> Sample
+  Tray --> Sched
+  Sample --> State
+  Sched --> State
+  State --> Reports
+  State --> Notes
+  Config --> Tray
+  Reports --> Git
+  Notes --> Git
+```
+
+## Requisitos
+
+- Windows 10 o 11
+- Python 3.11+
+- Git
+- GitHub CLI (`gh`) si deseas subidas automáticas sin ingresar credenciales manualmente.
+
+## Inicio rápido
 
 ### 1. Instalar
 
@@ -26,128 +89,122 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned -Force
 .\scripts\install.ps1
 ```
 
-Ese script:
-
-- crea `.venv` si hace falta,
-- instala las dependencias,
-- crea `config.local.yaml` si no existe,
-- y fija una identidad local de Git si este PC todavía no tenía `user.name` / `user.email`.
-
-### 2. Elegir máquina
-
-En este PC usa:
-
-```powershell
-.\scripts\activate_nexus.ps1
-```
-
-En la laptop usa:
-
-```powershell
-.\scripts\activate_nova.ps1
-```
-
-Ambos scripts:
-
-- dejan `config.local.yaml` con la máquina correcta,
-- reinstalan el entorno editable,
-- lanzan el agente oculto con `wscript`,
-- y crean un acceso directo en la carpeta Inicio de Windows.
-
-### 3. Probar un informe
-
-```powershell
-.\.venv\Scripts\python.exe -m stellar_daybook --once
-```
-
-## Uso Diario
-
-### Agente en bandeja
+### 2. Ejecutar la aplicación
 
 ```powershell
 pythonw -m stellar_daybook
 ```
 
-### Depuración en consola
+Para depurar mostrando la consola:
 
 ```powershell
 python -m stellar_daybook --console
 ```
 
-### Informe manual + push
+Para generar un único reporte de prueba y subirlo de inmediato:
 
 ```powershell
 python -m stellar_daybook --once
 ```
 
-## Flujo
+## Perfiles de escritorio
 
-```mermaid
-flowchart LR
-  A[Tray app] --> B[Foreground sampler]
-  B --> C[day_state.json]
-  D[Scheduler] --> E[Report builder]
-  E --> F[reports/YYYY-MM-DD.md]
-  E --> G[Git add / commit / push]
-  G --> H[GitHub]
-  B --> E
-  C --> E
+Los perfiles `Nova` y `Nexus` comparten la misma base de código pero utilizan diferentes archivos de activación local.
+
+| Perfil | Dispositivo objetivo | Activación |
+|---|---|---|
+| `Nova` | Computadora portátil | `scripts/activate_nova.ps1` |
+| `Nexus` | Computadora de escritorio | `scripts/activate_nexus.ps1` |
+
+### Nova
+
+```powershell
+powershell -ExecutionPolicy Bypass -File "C:\Users\Jack\Documents\GitHub\Experimentos\StellarDaybook\scripts\activate_nova.ps1"
 ```
 
-## Cómo Funciona
+### Nexus
 
-```mermaid
-sequenceDiagram
-  participant Win as Windows
-  participant App as StellarDaybook
-  participant Git as Git/GitHub
-  participant State as Local state
-
-  Win->>App: app arranca en segundo plano
-  App->>State: carga estado del día
-  App->>Win: consulta ventana en primer plano
-  App->>State: suma segundos de actividad
-  App->>App: evalúa ventanas de push
-  App->>Git: commit + push del reporte
-  Git-->>App: resultado
+```powershell
+powershell -ExecutionPolicy Bypass -File "C:\Users\pablo\OneDrive\Documents\GitHub\StellarDaybook\scripts\activate_nexus.ps1"
 ```
 
-## Estructura
+Ambos scripts de activación:
+- Crean `config.local.yaml` si no existe.
+- Instalan el paquete editable dentro del entorno virtual `.venv`.
+- Inician la aplicación de la bandeja del sistema en segundo plano con `wscript`.
+- Crean un acceso directo en la carpeta de Inicio de Windows para su arranque automático.
+
+## Subidas programadas
+
+| Día | Intervalo local (Chile) |
+|---|---|
+| Todos los días | 13:30 - Almuerzo |
+| Lunes a Jueves | 17:20 - Fin de jornada |
+| Viernes | 16:25 - Fin de jornada |
+
+Si el tiempo de tracking activo es inferior al umbral mínimo configurado, la subida programada omite el commit y solo registra el intento a nivel local.
+
+Si el comando `git push` falla, se remueve la captura para que el siguiente intervalo intente realizar el proceso de forma limpia.
+
+## Distribución de datos
 
 ```text
-assets/           banner SVG animado del README
-data/state/       estado local y logs del agente
-notes/            notas manuales que también viajan al commit
-reports/          reportes diarios generados en Markdown
-scripts/          instalación, activación y arranque oculto
-src/stellar_daybook/
+reports/              Reportes diarios en Markdown.
+notes/                Notas opcionales que se pueden subir junto con los reportes.
+data/state/           Estado local y registros (logs) del agente.
+assets/               Banner de presentación y recursos visuales.
+src/stellar_daybook/  Código fuente de la aplicación.
 ```
 
 ## Configuración
 
-`config.example.yaml` es la base. `config.local.yaml` la sobreescribe y no se versiona.
+El archivo `config.local.yaml` sobrescribe a `config.example.yaml` y no se incluye en el control de versiones.
 
-Campos clave:
+Sobrescrituras típicas:
+- Nombre de la máquina.
+- Ajustes preestablecidos de pausa.
+- Ubicación para el clima.
+- Filtros de privacidad.
+- Temporizadores del planificador.
 
-- `machine.name`: `Nexus` o `Nova`.
-- `timezone`: zona horaria usada en los reportes.
-- `schedule`: ventanas horarias de push.
-- `weather`: coordenadas y etiqueta del clima.
-- `privacy`: exclusiones de procesos y títulos de ventana.
+## Nota de privacidad
 
-## Requisitos
+Este repositorio está diseñado para ser público, por lo que debes mantener fuera de los commits la información sensible en:
+- `notes/`
+- `data/state/`
+- Exclusiones de títulos de ventanas demasiado amplias o demasiado específicas.
 
-- Windows 10/11.
-- Python 3.11 o superior.
-- Git.
-- GitHub CLI (`gh`) si quieres usar `gh auth setup-git` para pushes sin PAT.
+## Estructura del repositorio
 
-## Solución De Problemas
+```mermaid
+flowchart TD
+  Root["StellarDaybook"]
+  Scripts["scripts/"]
+  Src["src/stellar_daybook/"]
+  Reports["reports/"]
+  Notes["notes/"]
+  Data["data/state/"]
+  Assets["assets/"]
 
-- Si no hay `config.local.yaml`, ejecuta `.\scripts\install.ps1` o uno de los scripts de activación.
-- Si Git no tenía identidad local, `install.ps1` la configura automáticamente con el usuario de Windows.
-- Si el push falla por red o autenticación, el reporte se guarda localmente y se reintenta en la próxima ventana.
+  Root --> Scripts
+  Root --> Src
+  Root --> Reports
+  Root --> Notes
+  Root --> Data
+  Root --> Assets
+
+  Scripts --> Install["install.ps1"]
+  Scripts --> Nova["activate_nova.ps1"]
+  Scripts --> Nexus["activate_nexus.ps1"]
+  Scripts --> Vbs["run_daybook_hidden.vbs"]
+
+  Src --> App["app.py"]
+  Src --> Config["config.py"]
+  Src --> Tray["tray.py"]
+  Src --> Report["report_md.py"]
+  Src --> State["state_store.py"]
+```
 
 ## Licencia
 
-Uso personal. Si lo publicas o redistribuyes, ajusta la licencia según tu necesidad.
+Uso personal. Ajustar la licencia antes de publicar o redistribuir.
