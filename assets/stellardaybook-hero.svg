@@ -1,6 +1,23 @@
 <svg width="1200" height="360" viewBox="0 0 1200 360" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
   <title id="title">StellarDaybook</title>
   <desc id="desc">Diario de actividad de escritorio con subidas automáticas a GitHub, registro de ventanas activas, red, clima y recursos del sistema.</desc>
+  <style>
+    .star-twinkle {
+      animation: twinkle 3s ease-in-out infinite;
+    }
+    .compass-rotate {
+      transform-origin: 160px 148px;
+      animation: rotate 25s linear infinite;
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.15; }
+      50% { opacity: 1; }
+    }
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  </style>
   <defs>
     <linearGradient id="bg" x1="100" y1="20" x2="1100" y2="340" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#050811"/>
@@ -29,15 +46,15 @@
   <circle cx="930" cy="120" r="220" fill="url(#glow)"/>
   <circle cx="250" cy="280" r="180" fill="url(#glow2)"/>
 
-  <g opacity="0.28">
-    <circle cx="860" cy="72" r="2.2" fill="#ffffff"/>
-    <circle cx="1030" cy="98" r="1.8" fill="#ffffff"/>
-    <circle cx="1090" cy="165" r="1.7" fill="#ffffff"/>
-    <circle cx="980" cy="238" r="2.1" fill="#ffffff"/>
-    <circle cx="141" cy="96" r="1.7" fill="#ffffff"/>
-    <circle cx="192" cy="164" r="1.8" fill="#ffffff"/>
-    <circle cx="332" cy="72" r="2.1" fill="#ffffff"/>
-    <circle cx="405" cy="286" r="1.7" fill="#ffffff"/>
+  <g opacity="0.4">
+    <circle cx="860" cy="72" r="2.2" fill="#ffffff" class="star-twinkle" style="animation-delay: 0s;"/>
+    <circle cx="1030" cy="98" r="1.8" fill="#ffffff" class="star-twinkle" style="animation-delay: 0.8s;"/>
+    <circle cx="1090" cy="165" r="1.7" fill="#ffffff" class="star-twinkle" style="animation-delay: 1.6s;"/>
+    <circle cx="980" cy="238" r="2.1" fill="#ffffff" class="star-twinkle" style="animation-delay: 0.4s;"/>
+    <circle cx="141" cy="96" r="1.7" fill="#ffffff" class="star-twinkle" style="animation-delay: 1.2s;"/>
+    <circle cx="192" cy="164" r="1.8" fill="#ffffff" class="star-twinkle" style="animation-delay: 2s;"/>
+    <circle cx="332" cy="72" r="2.1" fill="#ffffff" class="star-twinkle" style="animation-delay: 0.6s;"/>
+    <circle cx="405" cy="286" r="1.7" fill="#ffffff" class="star-twinkle" style="animation-delay: 1.4s;"/>
   </g>
 
   <g filter="url(#shadow)">
@@ -47,7 +64,9 @@
   <g>
     <circle cx="160" cy="148" r="52" fill="none" stroke="url(#accent)" stroke-width="4"/>
     <circle cx="160" cy="148" r="22" fill="url(#accent)"/>
-    <path d="M160 90V72M160 224V206M108 148H90M230 148H212M123 111L110 98M197 185L210 198M123 185L110 198M197 111L210 98" stroke="rgba(255,255,255,0.52)" stroke-width="3" stroke-linecap="round"/>
+    <g class="compass-rotate">
+      <path d="M160 90V72M160 224V206M108 148H90M230 148H212M123 111L110 98M197 185L210 198M123 185L110 198M197 111L210 98" stroke="rgba(255,255,255,0.52)" stroke-width="3" stroke-linecap="round"/>
+    </g>
     <path d="M111 148C111 120 133 98 160 98C187 98 209 120 209 148C209 176 187 198 160 198C133 198 111 176 111 148Z" stroke="rgba(255,255,255,0.10)" stroke-width="1.5"/>
   </g>
 
