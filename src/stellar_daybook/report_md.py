@@ -9,6 +9,12 @@ from stellar_daybook.state_store import DayState
 logger = logging.getLogger(__name__)
 
 
+def _machine_slug(machine: str) -> str:
+    """Devuelve un nombre seguro para que cada máquina escriba su propio reporte."""
+    clean = "".join(ch if ch.isalnum() or ch in ("-", "_") else "_" for ch in machine.strip())
+    return clean or "local"
+
+
 def _fmt_duration(seconds: int) -> str:
     if seconds < 60:
         return f"{seconds}s"
@@ -91,7 +97,7 @@ def render_day_markdown(st: DayState, machine: str, cfg: dict) -> str:
 
 
 def write_day_report(root: Path, st: DayState, machine: str, cfg: dict) -> Path:
-    out = root / "reports" / f"{st.day}.md"
+    out = root / "reports" / f"{st.day}_{_machine_slug(machine)}.md"
     out.parent.mkdir(parents=True, exist_ok=True)
     text = render_day_markdown(st, machine, cfg)
     out.write_text(text, encoding="utf-8")

@@ -25,8 +25,8 @@ Está diseñado para ser ligero, privado por defecto y fácilmente legible si se
 | Área | Qué hace |
 |---|---|
 | Captura | Registra la ventana activa, red, clima y carga del sistema. |
-| Reporte | Escribe un reporte diario en formato Markdown en la carpeta `reports/`. |
-| Sincronización | Realiza commits y subidas (push) a GitHub cuando se alcanzan los intervalos programados. |
+| Reporte | Escribe un reporte diario por máquina en formato Markdown dentro de `reports/`. |
+| Sincronización | Baja cambios remotos con merge normal y luego sube commits cuando se alcanzan los intervalos programados. |
 | Privacidad | Permite excluir títulos de ventanas y procesos específicos de los registros públicos. |
 | Perfiles | Soporta configuraciones locales independientes: `Nova` y `Nexus`. |
 
@@ -144,12 +144,12 @@ Ambos scripts de activación:
 
 Si el tiempo de tracking activo es inferior al umbral mínimo configurado, la subida programada omite el commit y solo registra el intento a nivel local.
 
-Si el comando `git push` falla, se remueve la captura para que el siguiente intervalo intente realizar el proceso de forma limpia.
+Antes de subir, el agente ejecuta `git pull --no-rebase` para incorporar cambios de otras máquinas sin reescribir historial. Si el pull o el push fallan, se remueve la captura para que el siguiente intervalo intente realizar el proceso de forma limpia.
 
 ## Distribución de datos
 
 ```text
-reports/              Reportes diarios en Markdown.
+reports/              Reportes diarios por máquina (`YYYY-MM-DD_Nova.md`, `YYYY-MM-DD_Nexus.md`).
 notes/                Notas opcionales que se pueden subir junto con los reportes.
 data/state/           Estado local y registros (logs) del agente.
 assets/               Banner de presentación y recursos visuales.

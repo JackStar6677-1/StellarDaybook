@@ -54,6 +54,15 @@ def _ensure_git_identity(root: Path) -> None:
             logger.info("Git identity: user.email configurado localmente")
 
 
+def _pull_remote_updates(root: Path) -> bool:
+    """Baja cambios remotos con merge normal antes de publicar los commits locales."""
+    r = _run(["git", "pull", "--no-rebase"], root)
+    if r.returncode != 0:
+        logger.warning("git pull falló; no se empuja para evitar divergencias: %s", r.stderr)
+        return False
+    return True
+
+
 def commit_and_push(root: Path, message: str) -> bool:
     if not is_git_repo(root):
         logger.error("No hay .git en %s — ejecuta scripts/init-repo.bat", root)
@@ -72,6 +81,8 @@ def commit_and_push(root: Path, message: str) -> bool:
     r = _run(["git", "commit", "-m", message], root)
     if r.returncode != 0:
         logger.warning("git commit falló: %s", r.stderr)
+        return False
+    if not _pull_remote_updates(root):
         return False
     r = _run(["git", "push"], root)
     if r.returncode != 0:
