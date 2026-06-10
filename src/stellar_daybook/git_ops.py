@@ -56,9 +56,10 @@ def _ensure_git_identity(root: Path) -> None:
 
 def _pull_remote_updates(root: Path) -> bool:
     """Baja cambios remotos con merge normal antes de publicar los commits locales."""
-    r = _run(["git", "pull", "--no-rebase"], root)
+    r = _run(["git", "pull", "--no-rebase", "-X", "ours"], root)
     if r.returncode != 0:
-        logger.warning("git pull falló; no se empuja para evitar divergencias: %s", r.stderr)
+        logger.warning("git pull falló con conflictos o errores; abortando mezcla: %s", r.stderr)
+        _run(["git", "merge", "--abort"], root)
         return False
     return True
 
