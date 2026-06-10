@@ -7,10 +7,6 @@ import sys
 
 
 def main() -> None:
-    if sys.platform != "win32":
-        print("StellarDaybook: solo Windows (foreground Win32, bandeja).")
-        raise SystemExit(2)
-
     p = argparse.ArgumentParser(description="StellarDaybook — bitácora diaria")
     p.add_argument(
         "--once",
@@ -25,15 +21,23 @@ def main() -> None:
     )
     a = p.parse_args()
 
+    if sys.platform != "win32":
+        # Perfil Star — demonio headless para servidor Linux
+        if a.once:
+            from stellar_daybook.daemon_star import run_once
+            run_once(a.slot)
+        else:
+            from stellar_daybook.daemon_star import run_daemon
+            run_daemon(console=a.console)
+        return
+
+    # Perfil Windows — Nova / Nexus (bandeja de sistema)
     if a.once:
         from stellar_daybook.app import run_once_push
-
-        # --once suele ser prueba: siempre log en consola además del archivo.
         run_once_push(a.slot, console=True)
         return
 
     from stellar_daybook.app import run_foreground
-
     run_foreground(console=a.console)
 
 
