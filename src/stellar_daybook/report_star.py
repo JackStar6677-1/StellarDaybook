@@ -116,6 +116,8 @@ def render_star_markdown(
 ) -> str:
     machine = str((cfg.get("machine") or {}).get("name") or "Star")
     snap = last_snap or {}
+    if not snap and st.push_snapshots:
+        snap = st.push_snapshots[-1]
 
     docker_data: list[dict] = snap.get("docker") or []
     docker_restarts: dict = snap.get("docker_restarts") or {}
