@@ -1,0 +1,17 @@
+[Unit]
+Description=StellarDaybook — bitácora diaria del servidor star
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=jack
+WorkingDirectory=/opt/stacks/repos/stellardaybook
+ExecStart=/opt/stacks/repos/stellardaybook/.venv/bin/python -m stellar_daybook
+Restart=on-failure
+RestartSec=30
+StandardOutput=append:/var/log/stellar-daybook/stellar-daybook.log
+StandardError=append:/var/log/stellar-daybook/stellar-daybook.log
+
+[Install]
+WantedBy=multi-user.target
