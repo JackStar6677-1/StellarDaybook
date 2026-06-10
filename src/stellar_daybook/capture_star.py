@@ -187,25 +187,13 @@ def collect_nginx_requests(date_str: str | None = None) -> int:
 
 def collect_docker_restarts() -> dict[str, int]:
     """Número de reinicios de cada container (desde que fue creado)."""
-    out = _run(["docker", "inspect",
-                "--format", "{{.Name}}|{{.RestartCount}}",
-                "$(docker ps -aq)"])
-    if not out:
-        # Fallback: docker inspect uno por uno via ps -aq
-        ids = _run(["docker", "ps", "-aq"])
-        if not ids:
-            return {}
-        result: dict[str, int] = {}
-        for cid in ids.splitlines():
-            info = _run(["docker", "inspect", "--format",
-                         "{{.Name}}|{{.RestartCount}}", cid.strip()])
-            if "|" in info:
-                name, count = info.split("|", 1)
-                try:
-                    result[name.lstrip("/")] = int(count.strip())
-                except ValueError:
-                    pass
-        return result
+    ids_out = _run(["docker", "ps", "-aq"])
+    if not ids_out:
+        return {}
+    ids = [i.strip() for i in ids_out.splitlines() if i.strip()]
+    if not ids:
+        return {}
+    out = _run(["docker", "inspect", "--format", "{{.Name}}|{{.RestartCount}}"] + ids)
     result = {}
     for line in out.splitlines():
         if "|" in line:
