@@ -125,6 +125,98 @@ def collect_dhcp_leases() -> int:
         return 0
 
 
+def collect_fail2ban() -> dict[str, Any]:
+    """Bans activos y total de intentos bloqueados desde fail2ban."""
+    result: dict[str, Any] = {"jails": {}, "total_banned": 0}
+    jails_out = _run(["sudo", "fail2ban-client", "status"])
+    jails: list[str] = []
+    for line in jails_out.splitlines():
+        if "Jail list:" in line:
+            jails = [j.strip() for j in line.split(":", 1)[1].split(",") if j.strip()]
+            break
+    total = 0
+    for jail in jails:
+        out = _run(["sudo", "fail2ban-client", "status", jail])
+        banned = 0
+        total_failed = 0
+        for line in out.splitlines():
+            if "Currently banned:" in line:
+                try:
+                    banned = int(line.split(":", 1)[1].strip())
+                except ValueError:
+                    pass
+            if "Total failed:" in line:
+                try:
+                    total_failed = int(line.split(":", 1)[1].strip())
+                except ValueError:
+                    pass
+        result["jails"][jail] = {"banned": banned, "total_failed": total_failed}
+        total += banned
+    result["total_banned"] = total
+    return result
+
+
+def collect_nginx_requests(date_str: str | None = None) -> int:
+    """Número de requests en el log de nginx para el día dado (YYYY-MM-DD → DD/Mon/YYYY)."""
+    import re
+    from datetime import date
+    MONTH_MAP = {
+        "01": "Jan", "02": "Feb", "03": "Mar", "04": "Apr",
+        "05": "May", "06": "Jun", "07": "Jul", "08": "Aug",
+        "09": "Sep", "10": "Oct", "11": "Nov", "12": "Dec",
+    }
+    try:
+        if not date_str:
+            d = date.today()
+            date_str = d.isoformat()
+        parts = date_str.split("-")
+        nginx_date = f"{parts[2]}/{MONTH_MAP[parts[1]]}/{parts[0]}"
+        log = Path("/var/log/nginx/access.log")
+        if not log.exists():
+            return 0
+        count = 0
+        with log.open(encoding="utf-8", errors="replace") as f:
+            for line in f:
+                if nginx_date in line:
+                    count += 1
+        return count
+    except Exception:
+        logger.debug("collect_nginx_requests", exc_info=True)
+        return 0
+
+
+def collect_docker_restarts() -> dict[str, int]:
+    """Número de reinicios de cada container (desde que fue creado)."""
+    out = _run(["docker", "inspect",
+                "--format", "{{.Name}}|{{.RestartCount}}",
+                "$(docker ps -aq)"])
+    if not out:
+        # Fallback: docker inspect uno por uno via ps -aq
+        ids = _run(["docker", "ps", "-aq"])
+        if not ids:
+            return {}
+        result: dict[str, int] = {}
+        for cid in ids.splitlines():
+            info = _run(["docker", "inspect", "--format",
+                         "{{.Name}}|{{.RestartCount}}", cid.strip()])
+            if "|" in info:
+                name, count = info.split("|", 1)
+                try:
+                    result[name.lstrip("/")] = int(count.strip())
+                except ValueError:
+                    pass
+        return result
+    result = {}
+    for line in out.splitlines():
+        if "|" in line:
+            name, count = line.split("|", 1)
+            try:
+                result[name.lstrip("/")] = int(count.strip())
+            except ValueError:
+                pass
+    return result
+
+
 def collect_uptime() -> str:
     """Uptime del sistema formateado."""
     try:
@@ -139,8 +231,11 @@ def collect_uptime() -> str:
 
 def snapshot_star(cfg: dict) -> dict[str, Any]:
     """Snapshot completo del estado del servidor para una instantánea de push."""
+    from datetime import date
+    today = date.today().isoformat()
     return {
         "docker": collect_docker(),
+        "docker_restarts": collect_docker_restarts(),
         "services": collect_services(
             (cfg.get("star") or {}).get("monitored_services") or None
         ),
@@ -149,4 +244,6 @@ def snapshot_star(cfg: dict) -> dict[str, Any]:
         "network_io": collect_network_io(),
         "dhcp_leases": collect_dhcp_leases(),
         "uptime": collect_uptime(),
+        "fail2ban": collect_fail2ban(),
+        "nginx_requests_today": collect_nginx_requests(today),
     }

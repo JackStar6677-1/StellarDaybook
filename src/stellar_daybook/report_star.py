@@ -22,17 +22,32 @@ def _svc_icon(status: str) -> str:
     return _STATUS_ICON.get(status.lower().split()[0], "⚪")
 
 
-def _docker_table(containers: list[dict]) -> str:
+def _docker_table(containers: list[dict], restarts: dict[str, int] | None = None) -> str:
     if not containers:
         return "_Docker no disponible o sin containers._\n"
+    restarts = restarts or {}
     lines = [
-        "| Container | Estado | Imagen | Activo por |",
-        "|---|---|---|---|",
+        "| Container | Estado | Imagen | Activo por | Reinicios |",
+        "|---|---|---|---|---:|",
     ]
     for c in containers:
         icon = "🟢" if c["status"].lower().startswith("up") else "🔴"
+        r = restarts.get(c["name"], 0)
+        r_str = f"⚠️ {r}" if r > 0 else "0"
         lines.append(
-            f"| `{c['name']}` | {icon} {c['status']} | `{c['image']}` | {c['running_for']} |"
+            f"| `{c['name']}` | {icon} {c['status']} | `{c['image']}` | {c['running_for']} | {r_str} |"
+        )
+    return "\n".join(lines) + "\n"
+
+
+def _fail2ban_block(fb: dict) -> str:
+    if not fb or not fb.get("jails"):
+        return "- Sin datos de fail2ban (¿requiere sudo?)\n"
+    lines = [f"- **IPs baneadas actualmente:** {fb.get('total_banned', 0)}"]
+    for jail, stats in fb["jails"].items():
+        lines.append(
+            f"  - `{jail}`: {stats.get('banned', 0)} baneadas, "
+            f"{stats.get('total_failed', 0)} intentos fallidos totales"
         )
     return "\n".join(lines) + "\n"
 
@@ -103,12 +118,15 @@ def render_star_markdown(
     snap = last_snap or {}
 
     docker_data: list[dict] = snap.get("docker") or []
+    docker_restarts: dict = snap.get("docker_restarts") or {}
     services_data: dict = snap.get("services") or {}
     resources_data: dict = snap.get("resources") or {}
     uptime: str = snap.get("uptime", "desconocido")
     leases: Any = snap.get("dhcp_leases", "?")
     ssh: list = snap.get("ssh_sessions") or []
     net_io: dict = snap.get("network_io") or {}
+    fail2ban_data: dict = snap.get("fail2ban") or {}
+    nginx_reqs: int = snap.get("nginx_requests_today", 0)
     wx: dict | None = snap.get("weather")
 
     wx_line = ""
@@ -136,13 +154,16 @@ def render_star_markdown(
     sections += [
         "",
         "## Containers Docker",
-        _docker_table(docker_data),
+        _docker_table(docker_data, docker_restarts),
         "## Servicios del sistema",
         _services_table(services_data),
         "## Recursos del servidor",
         _resources_block(resources_data),
         "## Tráfico de red (desde boot)",
         _net_block(net_io),
+        "## Seguridad",
+        f"- **Requests nginx hoy:** {nginx_reqs}",
+        _fail2ban_block(fail2ban_data),
         "## Instantáneas por push",
         _snap_table(st.push_snapshots),
         "## Notas manuales",
