@@ -24,7 +24,7 @@ def fetch_weather(cfg: dict) -> dict[str, Any] | None:
         "timezone": tz,
     }
     try:
-        r = requests.get(OPEN_METEO, params=params, timeout=15)
+        r = requests.get(OPEN_METEO, params=params, timeout=5)
         r.raise_for_status()
         data = r.json()
         cur = data.get("current") or {}
