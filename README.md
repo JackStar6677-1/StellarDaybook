@@ -2,16 +2,16 @@
 
 ![StellarDaybook banner](assets/stellardaybook-hero.svg)
 
-StellarDaybook es un diario de escritorio para Windows que genera un reporte diario en Markdown, captura el contexto local de tu máquina y sube el resultado a GitHub según una programación establecida.
+StellarDaybook is a Windows desktop daily logger that generates daily Markdown reports, captures your machine's local context, and uploads the results to GitHub according to a set schedule.
 
-Registra:
-- La ventana activa en primer plano.
-- Detalles de la red local.
-- Clima local a través de la API de Open-Meteo.
-- Uso aproximado de CPU y RAM.
-- Etiquetas de horas laborales y heurísticas de actividad.
+It records:
+- The active foreground window.
+- Local network details.
+- Local weather via Open-Meteo API.
+- Approximate CPU and RAM usage.
+- Work hour tags and activity heuristics.
 
-Está diseñado para ser ligero, privado por defecto y fácilmente legible si se utiliza como repositorio público.
+It is designed to be lightweight, private by default, and easily readable when used as a public repository.
 
 <p>
   <img alt="Windows" src="https://img.shields.io/badge/Windows-10%2F11-0078D4?style=for-the-badge&logo=windows&logoColor=white">
@@ -20,47 +20,47 @@ Está diseñado para ser ligero, privado por defecto y fácilmente legible si se
   <img alt="Sync" src="https://img.shields.io/badge/Sincronizaci%C3%B3n-GitHub-181717?style=for-the-badge&logo=github&logoColor=white">
 </p>
 
-## A simple vista
+## At a Glance
 
-| Área | Qué hace |
+| Area | What it does |
 |---|---|
-| Captura | Registra la ventana activa, red, clima y carga del sistema. |
-| Reporte | Escribe un reporte diario por máquina en formato Markdown dentro de `reports/`. |
-| Sincronización | Baja cambios remotos con merge normal y luego sube commits cuando se alcanzan los intervalos programados. |
-| Privacidad | Permite excluir títulos de ventanas y procesos específicos de los registros públicos. |
-| Perfiles | Soporta configuraciones locales independientes: `Nova` y `Nexus`. |
+| Capture | Records active window, network, weather, and system load. |
+| Report | Writes a daily Markdown report per machine inside `reports/`. |
+| Sync | Fetches remote changes with a standard merge and uploads commits at scheduled intervals. |
+| Privacy | Allows excluding specific window titles and processes from public logs. |
+| Profiles | Supports independent local configurations: `Nova` and `Nexus`. |
 
-## Flujo del sistema
+## System Workflow
 
 ```mermaid
 flowchart LR
-  A["Muestreador de ventanas"] --> B["Captura de estado"]
-  B --> C["Reporte diario en Markdown"]
+  A["Window Sampler"] --> B["State Capture"]
+  B --> C["Daily Markdown Report"]
   C --> D["Git commit"]
   D --> E["Git push"]
-  B --> F["Estado local"]
-  F --> G["Validación de subidas programadas"]
+  B --> F["Local State"]
+  F --> G["Scheduled Push Validation"]
   G --> D
 ```
 
-## Arquitectura
+## Architecture
 
 ```mermaid
 graph TD
-  subgraph Windows["Escritorio Windows"]
-      Tray["App de bandeja de sistema"]
-      Sample["Muestreador de ventanas + recursos"]
-      Sched["Planificador"]
+  subgraph Windows["Windows Desktop"]
+      Tray["System Tray App"]
+      Sample["Window Sampler + recursos"]
+      Sched["Scheduler"]
       State["data/state/"]
   end
 
-  subgraph Repo["Salida del repositorio"]
+  subgraph Repo["Repository Output"]
       Notes["notes/"]
       Reports["reports/"]
       Config["config.local.yaml"]
   end
 
-  Git["Git + GitHub remoto"]
+  Git["Git + Remote GitHub"]
 
   Tray --> Sample
   Tray --> Sched
@@ -78,43 +78,43 @@ graph TD
 - Windows 10 o 11
 - Python 3.11+
 - Git
-- GitHub CLI (`gh`) si deseas subidas automáticas sin ingresar credenciales manualmente.
+- GitHub CLI (`gh`) if automatic uploads without manual credentials are desired.
 
-## Inicio rápido
+## Quick Start
 
-### 1. Instalar
+### 1. Install
 
 ```powershell
 Set-ExecutionPolicy -Scope CurrentUser RemoteSigned -Force
 .\scripts\install.ps1
 ```
 
-### 2. Ejecutar la aplicación
+### 2. Run Application
 
 ```powershell
 pythonw -m stellar_daybook
 ```
 
-Para depurar mostrando la consola:
+To debug showing the console:
 
 ```powershell
 python -m stellar_daybook --console
 ```
 
-Para generar un único reporte de prueba y subirlo de inmediato:
+To generate a single test report and upload immediately:
 
 ```powershell
 python -m stellar_daybook --once
 ```
 
-## Perfiles de escritorio
+## Desktop Profiles
 
-Los perfiles `Nova` y `Nexus` comparten la misma base de código pero utilizan diferentes archivos de activación local.
+The `Nova` and `Nexus` profiles share the same codebase but use different local activation files.
 
-| Perfil | Dispositivo objetivo | Activación |
+| Profile | Target Device | Activation |
 |---|---|---|
-| `Nova` | Computadora portátil | `scripts/activate_nova.ps1` |
-| `Nexus` | Computadora de escritorio | `scripts/activate_nexus.ps1` |
+| `Nova` | Laptop | `scripts/activate_nova.ps1` |
+| `Nexus` | Desktop PC | `scripts/activate_nexus.ps1` |
 
 ### Nova
 
@@ -128,53 +128,53 @@ powershell -ExecutionPolicy Bypass -File "C:\Users\Jack\Documents\GitHub\Experim
 powershell -ExecutionPolicy Bypass -File "C:\Users\pablo\OneDrive\Documents\GitHub\StellarDaybook\scripts\activate_nexus.ps1"
 ```
 
-Ambos scripts de activación:
-- Crean `config.local.yaml` si no existe.
-- Instalan el paquete editable dentro del entorno virtual `.venv`.
-- Inician la aplicación de la bandeja del sistema en segundo plano con `wscript`.
-- Crean un acceso directo en la carpeta de Inicio de Windows para su arranque automático.
+Both activation scripts:
+- Create `config.local.yaml` if it does not exist.
+- Install editable package inside `.venv` virtual environment.
+- Start system tray app in background with `wscript`.
+- Create a shortcut in Windows Startup folder for automatic boot.
 
-## Subidas programadas
+## Scheduled Uploads
 
-| Día | Intervalo local (Chile) |
+| Day | Local Interval (Chile) |
 |---|---|
-| Todos los días | 13:30 - Almuerzo |
-| Lunes a Jueves | 17:20 - Fin de jornada |
-| Viernes | 16:25 - Fin de jornada |
+| Every day | 13:30 - Lunchtime |
+| Monday to Thursday | 17:20 - End of day |
+| Friday | 16:25 - End of day |
 
-Si el tiempo de tracking activo es inferior al umbral mínimo configurado, la subida programada omite el commit y solo registra el intento a nivel local.
+If active tracking time is below the minimum threshold, scheduled push skips commit and logs attempt locally.
 
-Antes de subir, el agente ejecuta `git pull --no-rebase` para incorporar cambios de otras máquinas sin reescribir historial. Si el pull o el push fallan, se remueve la captura para que el siguiente intervalo intente realizar el proceso de forma limpia.
+Before uploading, agent runs `git pull --no-rebase` to integrate changes from other machines without rewriting history. If pull or push fails, capture is removed so next interval attempts cleanly.
 
-## Distribución de datos
+## Data Layout
 
 ```text
-reports/              Reportes diarios por máquina (`YYYY-MM-DD_Nova.md`, `YYYY-MM-DD_Nexus.md`).
-notes/                Notas opcionales que se pueden subir junto con los reportes.
-data/state/           Estado local y registros (logs) del agente.
-assets/               Banner de presentación y recursos visuales.
-src/stellar_daybook/  Código fuente de la aplicación.
+reports/              Daily reports per machine (`YYYY-MM-DD_Nova.md`, `YYYY-MM-DD_Nexus.md`).
+notes/                Optional notes that can be uploaded alongside reports.
+data/state/           Local State y registros (logs) del agente.
+assets/               Presentation banner and visual assets.
+src/stellar_daybook/  Application source code.
 ```
 
-## Configuración
+## Configuration
 
-El archivo `config.local.yaml` sobrescribe a `config.example.yaml` y no se incluye en el control de versiones.
+`config.local.yaml` overrides `config.example.yaml` and is excluded from version control.
 
-Sobrescrituras típicas:
-- Nombre de la máquina.
-- Ajustes preestablecidos de pausa.
-- Ubicación para el clima.
-- Filtros de privacidad.
-- Temporizadores del planificador.
+Typical overrides:
+- Machine name.
+- Preset pause settings.
+- Weather location.
+- Privacy filters.
+- Scheduler timers.
 
-## Nota de privacidad
+## Privacy Note
 
-Este repositorio está diseñado para ser público, por lo que debes mantener fuera de los commits la información sensible en:
+This repository is designed to be public, so keep sensitive information out of commits in:
 - `notes/`
 - `data/state/`
-- Exclusiones de títulos de ventanas demasiado amplias o demasiado específicas.
+- Window title exclusions that are overly broad or overly specific.
 
-## Estructura del repositorio
+## Repository Structure
 
 ```mermaid
 flowchart TD
@@ -205,6 +205,6 @@ flowchart TD
   Src --> State["state_store.py"]
 ```
 
-## Licencia
+## License
 
-Uso personal. Ajustar la licencia antes de publicar o redistribuir.
+Personal use. Adjust license before publishing or redistributing.
