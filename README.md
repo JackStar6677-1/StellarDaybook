@@ -73,7 +73,7 @@ graph TD
   Notes --> Git
 ```
 
-## Requisitos
+## Prerequisites
 
 - Windows 10 o 11
 - Python 3.11+
@@ -156,7 +156,7 @@ assets/               Banner de presentación y recursos visuales.
 src/stellar_daybook/  Código fuente de la aplicación.
 ```
 
-## Configuración
+## Configuration
 
 El archivo `config.local.yaml` sobrescribe a `config.example.yaml` y no se incluye en el control de versiones.
 
@@ -205,6 +205,6 @@ flowchart TD
   Src --> State["state_store.py"]
 ```
 
-## Licencia
+## License
 
 Uso personal. Ajustar la licencia antes de publicar o redistribuir.
