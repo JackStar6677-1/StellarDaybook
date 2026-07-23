@@ -28,7 +28,7 @@ Está diseñado para ser ligero, privado por defecto y fácilmente legible si se
 | Reporte | Escribe un reporte diario por máquina en formato Markdown dentro de `reports/`. |
 | Sincronización | Baja cambios remotos con merge normal y luego sube commits cuando se alcanzan los intervalos programados. |
 | Privacidad | Permite excluir títulos de ventanas y procesos específicos de los registros públicos. |
-| Perfiles | Soporta configuraciones locales independientes: `Nova` y `Nexus`. |
+| Perfiles | Soporta configurations locales independientes: `Nova` y `Nexus`. |
 
 ## Flujo del sistema
 
@@ -109,7 +109,7 @@ python -m stellar_daybook --once
 
 ## Perfiles de escritorio
 
-Los perfiles `Nova` y `Nexus` comparten la misma base de código pero utilizan diferentes archivos de activación local.
+Los perfiles `Nova` y `Nexus` comparten la misma base de código pero utilizan diferentes files de activación local.
 
 | Perfil | Dispositivo objetivo | Activación |
 |---|---|---|
@@ -132,7 +132,7 @@ Ambos scripts de activación:
 - Crean `config.local.yaml` si no existe.
 - Instalan el paquete editable dentro del entorno virtual `.venv`.
 - Inician la aplicación de la bandeja del sistema en segundo plano con `wscript`.
-- Crean un acceso directo en la carpeta de Inicio de Windows para su arranque automático.
+- Crean un acceso directo en la folder de Inicio de Windows para su arranque automático.
 
 ## Subidas programadas
 
